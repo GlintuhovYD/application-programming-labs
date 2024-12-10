@@ -1,6 +1,6 @@
 import argparse
-import downloader
 import annotator
+import downloader
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description='Download and annotate images.')
@@ -11,8 +11,4 @@ if __name__ == "__main__":
 
     downloader.download_images(args.keyword, args.image_dir)
     annotator.create_annotation_file(args.image_dir, args.annotation_file)
-    print(f"Images downloaded and annotated to {args.annotation_file}")
-
-    for image_path in annotator.image_iterator(args.annotation_file):
-        print(f"Processing image: {image_path}")
-
+    print(f"Изображения скачаны и аннотированы в {args.annotation_file}")
