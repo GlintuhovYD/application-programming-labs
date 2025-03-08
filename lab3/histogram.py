@@ -2,7 +2,8 @@ import cv2
 import matplotlib.pyplot as plt
 import numpy as np
 
-def calculate_histogram(img: cv2.Mat) -> tuple:
+
+def calculate_histogram(img: np.ndarray) -> tuple:
     """Calculates the histogram for three color channels (BGR).
 
     Args:
@@ -10,29 +11,23 @@ def calculate_histogram(img: cv2.Mat) -> tuple:
 
     Returns:
         A tuple containing three NumPy arrays, one for each color channel (B, G, R).
-        Returns (None, None, None) if the input is invalid or not a color image.
+        Raises exceptions for invalid input.
     """
     if not isinstance(img, np.ndarray):
-        print("Error: Input image is not a NumPy array.")
-        return None, None, None
+        raise TypeError("Input image is not a NumPy array.")
     if len(img.shape) != 3:
-        print("Error: Input image is not a color image (must have 3 channels).")
-        return None, None, None
+        raise ValueError("Input image is not a color image (must have 3 channels).")
 
     try:
         b, g, r = cv2.split(img)
-
         hist_b = cv2.calcHist([b], [0], None, [256], [0, 256]).flatten()
         hist_g = cv2.calcHist([g], [0], None, [256], [0, 256]).flatten()
         hist_r = cv2.calcHist([r], [0], None, [256], [0, 256]).flatten()
-
         return hist_b, hist_g, hist_r
     except cv2.error as e:
-        print(f"OpenCV error during histogram calculation: {e}")
-        return None, None, None
+        raise RuntimeError(f"OpenCV error during histogram calculation: {e}") from e
     except Exception as e:
-        print(f"An unexpected error occurred during histogram calculation: {e}")
-        return None, None, None
+        raise RuntimeError(f"An unexpected error occurred during histogram calculation: {e}") from e
 
 
 def plot_histogram(hist_b: np.ndarray, hist_g: np.ndarray, hist_r: np.ndarray, output_path: str) -> bool:
@@ -49,10 +44,10 @@ def plot_histogram(hist_b: np.ndarray, hist_g: np.ndarray, hist_r: np.ndarray, o
 
     Raises:
         ValueError: If the input histogram data is invalid.
+        Exception: If any other error occurs during plotting.
     """
-    if not (isinstance(hist_b, np.ndarray) and hist_b.ndim == 1 and len(hist_b) == 256 and
-            isinstance(hist_g, np.ndarray) and hist_g.ndim == 1 and len(hist_g) == 256 and
-            isinstance(hist_r, np.ndarray) and hist_r.ndim == 1 and len(hist_r) == 256):
+    if not all(
+            isinstance(hist, np.ndarray) and hist.ndim == 1 and len(hist) == 256 for hist in [hist_b, hist_g, hist_r]):
         raise ValueError("Invalid histogram data. Must be three 1D NumPy arrays of length 256.")
 
     try:
@@ -69,10 +64,7 @@ def plot_histogram(hist_b: np.ndarray, hist_g: np.ndarray, hist_r: np.ndarray, o
         plt.savefig(output_path)
         plt.close()
         return True
-    except FileNotFoundError:
-        print(f"Could not save histogram to {output_path}. Check the path.")
-        return False
+    except FileNotFoundError as e:
+        raise FileNotFoundError(f"Could not save histogram to {output_path}. Check the path.") from e
     except Exception as e:
-        print(f"An unexpected error occurred while plotting the histogram: {e}")
-        return False
-
+        raise Exception(f"An unexpected error occurred while plotting the histogram: {e}") from e

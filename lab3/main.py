@@ -5,6 +5,7 @@ import cv2
 import histogram
 import image_processing
 
+
 def process_image(input_image: str, output_dir: str, show_images: bool = False) -> None:
     """Processes an image, calculates its histogram, and saves the results.
 
@@ -19,19 +20,13 @@ def process_image(input_image: str, output_dir: str, show_images: bool = False) 
     """
     try:
         img = image_processing.load_image(input_image)
-        if img is None:
-            raise FileNotFoundError(f"Could not load image from {input_image}")
 
         size = image_processing.get_image_size(img)
         print(f"Image size: {size}")
 
         hist_b, hist_g, hist_r = histogram.calculate_histogram(img)
-        if hist_b is None:
-            raise Exception("Histogram calculation failed.")
 
         os.makedirs(output_dir, exist_ok=True)
-        if not os.path.isdir(output_dir):
-            raise FileNotFoundError(f"Could not create output directory: {output_dir}")
 
         histogram_filepath = os.path.join(output_dir, "histogram.png")
         histogram.plot_histogram(hist_b, hist_g, hist_r, histogram_filepath)
@@ -48,10 +43,8 @@ def process_image(input_image: str, output_dir: str, show_images: bool = False) 
 
         print(f"Results saved to: {output_dir}")
 
-    except FileNotFoundError as e:
-        print(f"Error: File not found - {e}")
-    except Exception as e:
-        print(f"An unexpected error occurred: {e}")
+    except (FileNotFoundError, TypeError, ValueError, Exception) as e:
+        raise Exception(f"An error occurred: {e}") from e
 
 
 def main():
@@ -60,8 +53,11 @@ def main():
     parser.add_argument('output_dir', type=str, help='Directory to save processed images and histogram')
     parser.add_argument('--show_images', action='store_true', help='Display images using cv2.imshow (optional)')
     args = parser.parse_args()
-    process_image(args.input_image, args.output_dir, args.show_images)
+    try:
+        process_image(args.input_image, args.output_dir, args.show_images)
+    except Exception as e:
+        print(f"Fatal error: {e}")
 
 
-if __name__ == "__main__":
+if __name__ == "__main__":  # Corrected typo here
     main()
